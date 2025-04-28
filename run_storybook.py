@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-"""
-Storybook Application Runner
-----------------------------
 
-Main script to start the Storybook application.
-Launches the Flask backend server and opens a browser window.
-"""
 import os
 import sys
 import subprocess
