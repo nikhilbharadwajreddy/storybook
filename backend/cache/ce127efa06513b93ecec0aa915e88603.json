@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-04-27T23:18:43.741390",
+  "data": {
+    "filename": "6538f924-e126-444f-87ff-04ed976f4f5d/0_backdrop.png",
+    "token_usage": {
+      "model": "gpt-image-1",
+      "size": "1536x1024",
+      "quality": "high",
+      "tokens": 6240
+    },
+    "quality": "high",
+    "size": "1536x1024"
+  }
+}

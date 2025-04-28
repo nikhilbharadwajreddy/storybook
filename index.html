@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storybook Generator POC</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap">
+    <link rel="stylesheet" href="static/css/styles.css">
+    <!-- No external libraries needed -->
+</head>
+<body>
+    <!-- Cost Display (initially hidden) -->
+    <div id="costDisplay" class="cost-display hidden">
+        <h3>API Cost Tracker</h3>
+        <div class="cost-item">
+            <span>Text Generation:</span>
+            <span id="textCost">$0.00</span>
+        </div>
+        <div class="cost-item">
+            <span>Image Generation:</span>
+            <span id="imageCost">$0.00</span>
+        </div>
+        <div class="cost-item cost-total">
+            <span>Total:</span>
+            <span id="totalCost">$0.00</span>
+        </div>
+    </div>
+    <div class="container">
+        <header>
+            <h1>Storybook Generator POC</h1>
+            <p>Create personalized story prompts and illustrations for children</p>
+            <div class="signature">Made with ❤️ by Nikhil</div>
+        </header>
+        
+        <!-- Error message display -->
+        <div id="errorMessage" class="error hidden"></div>
+        
+        <!-- Form for story generation -->
+        <section class="form-container">
+            <div class="info-box">
+                <h3>🎉 New: Storybook Creator</h3>
+                <p>We've added a new feature to create complete storybooks with:</p>
+                <ul>
+                    <li><strong>Single backdrop image</strong> - A cohesive background for all pages</li>
+                    <li><strong>Proper layout</strong> - Text and images properly arranged</li>
+                    <li><strong>Simple scrolling view</strong> - Easy-to-read story format</li>
+                </ul>
+                <p>Generate your prompts and images, then click "Create Storybook" to try it out!</p>
+            </div>
+            
+            <h2>Generate Story Prompts</h2>
+            <form id="storyForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="childName">Child's Name</label>
+                    <input type="text" id="childName" name="childName" required placeholder="Enter the child's name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="theme">Story Theme</label>
+                    <input type="text" id="theme" name="theme" required placeholder="e.g., Space Adventure, Underwater Exploration, Magic Forest">
+                </div>
+                
+                <div class="form-group">
+                    <label for="numPrompts">Number of Prompts (1-10)</label>
+                    <input type="number" id="numPrompts" name="numPrompts" min="1" max="10" value="3" required>
+                    <div class="help-text">How many different story prompts to generate</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="traits">Personal Details About the Child</label>
+                    <textarea id="traits" name="traits" required placeholder="Enter hobbies, favorite animals, colors, locations, or other interests..."></textarea>
+                    <div class="help-text">These details will be incorporated into the story prompts</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="textModel">Text Generation Model</label>
+                    <select id="textModel" name="textModel" required>
+                        <option value="" disabled selected>Select a model</option>
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageModel">Image Generation Model</label>
+                    <select id="imageModel" name="imageModel" required onchange="toggleQualitySelector()">
+                        <option value="" disabled selected>Select a model</option>
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="form-group" id="qualityContainer" style="display: none;">
+                    <label for="imageQuality">Image Quality</label>
+                    <select id="imageQuality" name="imageQuality">
+                        <option value="low">Low (Faster, Lower Cost)</option>
+                        <option value="medium">Medium (Balanced)</option>
+                        <option value="high" selected>High (Best Quality)</option>
+                    </select>
+                    <div class="help-text">Quality setting affects token usage and cost for GPT Image</div>
+                    <div class="token-info">
+                        <h4>GPT Image Token Usage:</h4>
+                        <ul>
+                            <li><strong>Low quality:</strong> 272 tokens (fastest, lowest cost)</li>
+                            <li><strong>Medium quality:</strong> 1,056 tokens (balanced)</li>
+                            <li><strong>High quality:</strong> 4,160 tokens (highest quality)</li>
+                        </ul>
+                        <p>Higher quality = more tokens = better detail but higher cost</p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="referenceImage">Reference Image of the Child (Recommended)</label>
+                    <input type="file" id="referenceImage" name="referenceImage" accept="image/*">
+                    <div class="help-text">Upload a clear photo of the child to ensure they look consistent in all illustrations</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apiKey">OpenAI API Key</label>
+                    <div style="display: flex;">
+                        <input type="password" id="apiKey" name="apiKey" required placeholder="Enter your OpenAI API key" style="flex: 1; margin-right: 10px;">
+                        <button type="button" id="refreshModelsBtn" style="width: auto;">Refresh Models</button>
+                    </div>
+                    <div class="help-text">Your API key is used only for this session and not stored on our servers</div>
+                </div>
+                
+                <div class="button-container">
+                    <button type="submit">Generate Prompts</button>
+                </div>
+            </form>
+            
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="loading hidden">
+                <div class="spinner"></div>
+                <p id="loadingMessage">Loading...</p>
+            </div>
+        </section>
+        
+        <!-- Prompts display -->
+        <section id="promptsContainer" class="prompts-container hidden">
+            <!-- Prompts will be added here by JavaScript -->
+        </section>
+        
+        <!-- Storybook Preview container -->
+        <section id="preview-container" class="preview-container hidden">
+            <!-- Images will be shown here -->
+        </section>
+        
+        <!-- Create book button -->
+        <div id="createBookContainer" class="button-container hidden">
+            <button id="createBookBtn" type="button">Create Storybook</button>
+        </div>
+        
+        <!-- Storybook container -->
+        <section id="storybookContainer" class="storybook-container hidden">
+            <h2>Your Storybook</h2>
+            
+            <div id="flipbook" class="hidden">
+                <!-- Pages will be added here dynamically -->
+            </div>
+            
+            <!-- Storybook controls -->
+            <div class="storybook-controls">
+                <button id="backToPromptBtn">Back to Prompts</button>
+            </div>
+        </section>
+    </div>
+    
+    <script src="static/js/app.js"></script>
+</body>
+</html>
