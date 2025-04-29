@@ -8,7 +8,7 @@ import io
 import base64
 import logging
 from PIL import Image
-from openai import OpenAI
+import openai
 from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ def generate_illustration(
     enhanced_prompt = create_enhanced_prompt(prompt, child_name, bool(reference_image_path))
     
     # Initialize OpenAI client
-    client = OpenAI(api_key=api_key)
+    openai.api_key = api_key
     
     try:
         # Create the output filename
@@ -67,7 +67,7 @@ def generate_illustration(
             # Generate image with reference
             logger.info(f"Using reference image for {child_name}")
             try:
-                result = client.images.edit(
+                result = openai.images.edit(
                     model="gpt-image-1",
                     image=[buf],  # Send the image buffer directly
                     prompt=enhanced_prompt,
@@ -77,7 +77,7 @@ def generate_illustration(
             except Exception as edit_error:
                 logger.warning(f"Edit API failed: {edit_error}, trying generation API")
                 # Fall back to standard generation if edit fails
-                result = client.images.generate(
+                result = openai.images.generate(
                     model="gpt-image-1",
                     prompt=enhanced_prompt + f" The child should resemble {child_name}.",
                     size=size,
@@ -87,7 +87,7 @@ def generate_illustration(
         else:
             # Standard image generation without reference
             logger.info("Generating image without reference")
-            result = client.images.generate(
+            result = openai.images.generate(
                 model="gpt-image-1",
                 prompt=enhanced_prompt,
                 size=size,

@@ -6,7 +6,7 @@ Simplified approach to generating background images.
 import os
 import base64
 import logging
-from openai import OpenAI
+import openai
 import requests
 from typing import Optional
 
@@ -43,10 +43,10 @@ def generate_background(
     
     try:
         # Initialize OpenAI client
-        client = OpenAI(api_key=api_key)
+        openai.api_key = api_key
         
         # Generate background image
-        result = client.images.generate(
+        result = openai.images.generate(
             model="gpt-image-1",
             prompt=prompt,
             size=size,
