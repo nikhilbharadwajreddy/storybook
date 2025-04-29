@@ -9,6 +9,10 @@ import logging
 import openai
 import requests
 from typing import Optional
+import httpx
+from openai import OpenAI
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +47,11 @@ def generate_background(
     
     try:
         # Initialize OpenAI client
-        openai.api_key = api_key
+        transport = httpx.HTTPTransport(proxy=None)
+        client = OpenAI(api_key=api_key, http_client=httpx.Client(transport=transport))
         
         # Generate background image
-        result = openai.images.generate(
+        result = client.images.generate(
             model="gpt-image-1",
             prompt=prompt,
             size=size,

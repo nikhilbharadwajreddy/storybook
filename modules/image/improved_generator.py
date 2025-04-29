@@ -10,6 +10,9 @@ import logging
 from PIL import Image
 import openai
 from typing import Optional, Dict, Any
+import httpx
+from openai import OpenAI
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +50,8 @@ def generate_illustration(
     enhanced_prompt = create_enhanced_prompt(prompt, child_name, bool(reference_image_path))
     
     # Initialize OpenAI client
-    openai.api_key = api_key
+    transport = httpx.HTTPTransport(proxy=None)
+    client = OpenAI(api_key=api_key, http_client=httpx.Client(transport=transport))
     
     try:
         # Create the output filename
@@ -67,7 +71,7 @@ def generate_illustration(
             # Generate image with reference
             logger.info(f"Using reference image for {child_name}")
             try:
-                result = openai.images.edit(
+                result = client.images.edit(
                     model="gpt-image-1",
                     image=[buf],  # Send the image buffer directly
                     prompt=enhanced_prompt,
@@ -77,7 +81,7 @@ def generate_illustration(
             except Exception as edit_error:
                 logger.warning(f"Edit API failed: {edit_error}, trying generation API")
                 # Fall back to standard generation if edit fails
-                result = openai.images.generate(
+                result = client.images.generate(
                     model="gpt-image-1",
                     prompt=enhanced_prompt + f" The child should resemble {child_name}.",
                     size=size,
@@ -87,7 +91,7 @@ def generate_illustration(
         else:
             # Standard image generation without reference
             logger.info("Generating image without reference")
-            result = openai.images.generate(
+            result = client.images.generate(
                 model="gpt-image-1",
                 prompt=enhanced_prompt,
                 size=size,
