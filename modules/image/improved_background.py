@@ -48,7 +48,13 @@ def generate_background(
     try:
         # Initialize OpenAI client
         transport = httpx.HTTPTransport(proxy=None)
-        client = OpenAI(api_key=api_key, http_client=httpx.Client(transport=transport))
+        client = OpenAI(
+            api_key=api_key, 
+            http_client=httpx.Client(
+                transport=transport,
+                timeout=120.0  # 2 minute timeout for background generation
+            )
+        )
         
         # Generate background image
         result = client.images.generate(
@@ -74,7 +80,7 @@ def generate_background(
                 f.write(img_bytes)
         elif hasattr(result.data[0], 'url') and result.data[0].url:
             # Download from URL
-            response = requests.get(result.data[0].url, timeout=30)
+            response = requests.get(result.data[0].url, timeout=60)  # Increased timeout to 60 seconds
             if response.status_code == 200:
                 with open(image_path, "wb") as f:
                     f.write(response.content)

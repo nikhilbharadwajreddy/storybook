@@ -145,8 +145,13 @@ async function generateIllustration(sceneIndex) {
     actionButton.disabled = true;
     
     try {
-        // Call API to generate illustration
-        const response = await fetch('/api/generate-illustration', {
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timed out after 180 seconds')), 180000)
+        );
+        
+        // Create the fetch promise
+        const fetchPromise = fetch('/api/generate-illustration', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -158,9 +163,18 @@ async function generateIllustration(sceneIndex) {
             })
         });
         
+        // Race the promises
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Server error: ${response.status}`);
+            let errorMessage = `Server error: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (parseError) {
+                console.error('Error parsing error response:', parseError);
+            }
+            throw new Error(errorMessage);
         }
         
         const data = await response.json();
@@ -185,6 +199,7 @@ async function generateIllustration(sceneIndex) {
     } catch (error) {
         console.error('Error generating illustration:', error);
         imageContainer.innerHTML = `<p class="error">Error: ${error.message || 'Failed to generate illustration'}</p>`;
+        imageContainer.innerHTML += '<p>This could be due to a network issue, an invalid API key, or a timeout. Please try again.</p>';
         actionButton.disabled = false;
     }
 }

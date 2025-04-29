@@ -13,6 +13,7 @@ import uuid
 import logging
 from werkzeug.utils import secure_filename
 from datetime import datetime
+from flask_cors import CORS  # Import CORS
 
 # Import services
 from modules.story.generator import generate_story
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_' + str(uuid.uuid4()))
 
 # Add basename filter for templates
@@ -248,7 +250,20 @@ def api_generate_illustration():
         
     except Exception as e:
         logger.exception("Error generating illustration")
-        return jsonify({"error": str(e)}), 500
+        
+        # Provide more detailed error information
+        error_message = str(e)
+        error_type = type(e).__name__
+        
+        # Check for specific error types
+        if "api_key" in error_message.lower() or "auth" in error_message.lower():
+            return jsonify({"error": f"OpenAI API key error: {error_message}", "error_type": error_type}), 401
+        elif "timeout" in error_message.lower() or "timed out" in error_message.lower():
+            return jsonify({"error": "Request timed out. Image generation is taking longer than expected. Please try again.", "error_type": error_type}), 504
+        elif "rate" in error_message.lower() and "limit" in error_message.lower():
+            return jsonify({"error": "OpenAI rate limit reached. Please wait a moment before trying again.", "error_type": error_type}), 429
+        else:
+            return jsonify({"error": error_message, "error_type": error_type}), 500
 
 @app.route('/api/create-pdf', methods=['POST'])
 def api_create_pdf():
