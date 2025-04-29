@@ -94,21 +94,43 @@ def create_text_overlay(
     
     return output_path
 
+# def get_storybook_font(size: int) -> ImageFont.FreeTypeFont:
+#     """Get a kid-friendly font, with several fallbacks."""
+#     kid_fonts = [
+#         "Comic Sans MS", "Baloo Bhai", "Fredoka One", "Quicksand",
+#         "Arial Rounded MT Bold", "Chalkboard", "Marker Felt",
+#         "Verdana", "Georgia", "Tahoma", "Trebuchet MS"
+#     ]
+    
+#     for font_name in kid_fonts:
+#         try:
+#             return ImageFont.truetype(font_name, size)
+#         except:
+#             continue
+    
+#     return ImageFont.load_default()
+
 def get_storybook_font(size: int) -> ImageFont.FreeTypeFont:
-    """Get a kid-friendly font, with several fallbacks."""
-    kid_fonts = [
-        "Comic Sans MS", "Baloo Bhai", "Fredoka One", "Quicksand",
-        "Arial Rounded MT Bold", "Chalkboard", "Marker Felt",
-        "Verdana", "Georgia", "Tahoma", "Trebuchet MS"
+    """Load available kid-friendly fonts from static/fonts/."""
+    kid_font_paths = [
+        "static/fonts/ComicNeue-Regular.ttf"
+        "static/fonts/AkayaKanadaka-Regular.ttf",
+        "static/fonts/Barriecito-Regular.ttf",
+        "static/fonts/DynaPuff-VariableFont_wdth,wght.ttf"
     ]
     
-    for font_name in kid_fonts:
-        try:
-            return ImageFont.truetype(font_name, size)
-        except:
-            continue
-    
+    for font_path in kid_font_paths:
+        if os.path.exists(font_path):
+            try:
+                return ImageFont.truetype(font_path, size)
+            except Exception as e:
+                logger.warning(f"Failed to load font {font_path}: {e}")
+                continue
+
+    logger.warning("No custom fonts found. Falling back to default font.")
     return ImageFont.load_default()
+
+
 
 def get_title_font(base_font, size: int) -> ImageFont.FreeTypeFont:
     """Get a slightly larger font for the title, based on the base font."""

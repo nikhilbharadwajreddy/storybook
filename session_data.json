@@ -56,5 +56,30 @@
       }
     },
     "created_at": "2025-04-28T23:15:21.578384"
+  },
+  "1471c0e1-8199-41f5-80bf-2a819c9ccc7c": {
+    "child_name": "Nik",
+    "theme": "Space",
+    "traits": "NIK, A YOUNG BOY WHO\r\nLOVES DOGS, CATS, AND\r\nELEPHANTS,",
+    "story_scenes": [
+      "Nik, a young boy who loves dogs, cats, and elephants, was playing in his backyard when he noticed a bright light in the sky. Curious, he followed the light and found a spaceship landing in his yard.",
+      "As the spaceship's doors opened, Nik saw a group of alien creatures with furry bodies and long ears coming out. They were friendly and invited Nik to join them on a journey through space to explore different planets.",
+      "During their adventure, Nik met alien dogs, cats, and elephants on each planet they visited. He was overjoyed to see creatures similar to his favorite animals in the vastness of space. Eventually, the aliens dropped Nik back in his backyard, and he waved goodbye as the spaceship flew back into the stars."
+    ],
+    "reference_image": "/Users/bharadwajreddy/Desktop/storybook/static/references/1471c0e1-8199-41f5-80bf-2a819c9ccc7c_22.png",
+    "background_image": "/Users/bharadwajreddy/Desktop/storybook/static/images/1471c0e1-8199-41f5-80bf-2a819c9ccc7c_background.png",
+    "illustration_quality": "low",
+    "background_quality": "low",
+    "images": {
+      "0": {
+        "illustration": "/Users/bharadwajreddy/Desktop/storybook/static/images/1471c0e1-8199-41f5-80bf-2a819c9ccc7c_scene_0_illustration.png",
+        "text_overlay": "/Users/bharadwajreddy/Desktop/storybook/static/images/1471c0e1-8199-41f5-80bf-2a819c9ccc7c_scene_0_text.png"
+      },
+      "1": {
+        "illustration": "/Users/bharadwajreddy/Desktop/storybook/static/images/1471c0e1-8199-41f5-80bf-2a819c9ccc7c_scene_1_illustration.png",
+        "text_overlay": "/Users/bharadwajreddy/Desktop/storybook/static/images/1471c0e1-8199-41f5-80bf-2a819c9ccc7c_scene_1_text.png"
+      }
+    },
+    "created_at": "2025-04-29T02:07:51.705076"
   }
 }
