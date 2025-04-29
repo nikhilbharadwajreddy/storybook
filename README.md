@@ -1,53 +1,43 @@
-# Storybook Generator POC
+# Simplified Storybook Generator
 
-A web application that generates personalized children's storybooks with AI-generated text and illustrations.
-
-Made with ❤️ by Nikhil
+A streamlined web application that generates personalized children's storybooks with AI-generated text and illustrations.
 
 ## Features
 
 - Create personalized stories based on a child's name, theme, and traits
 - Generate high-quality illustrations for each story scene
-- Create beautifully formatted text pages with themed backgrounds
+- Create background images for text pages
+- Overlay text on themed backgrounds
 - Export to PDF for easy reading and printing
-- Cache stories and images to reduce API costs
 
 ## Project Structure
 
 ```
-storybook/
-├── backend/                # Python backend processing
-│   ├── api/                # Flask API endpoints
-│   ├── services/           # Core services
-│   │   ├── image/          # Image generation
-│   │   ├── pdf/            # PDF creation
-│   │   └── text/           # Text generation
-│   ├── templates/          # Prompt templates
-│   └── utils/              # Utility functions
-├── static/                 # Frontend assets
-│   ├── css/                # Stylesheets
-│   ├── js/                 # JavaScript
-│   ├── images/             # Generated images
-│   └── pdfs/               # Generated PDFs
-├── cleanup.py              # Project cleanup utility
-├── index.html              # Main HTML page
-└── run_storybook.py        # Application runner
+storybook-simplified/
+├── app.py                 # Main Flask application 
+├── templates/             # HTML templates
+│   ├── index.html         # Input form
+│   └── storybook.html     # Storybook viewer/download page
+├── static/                # Static assets
+│   ├── css/               # Stylesheets
+│   ├── js/                # JavaScript
+│   ├── images/            # Generated images
+│   ├── pdfs/              # Generated PDFs
+│   └── references/        # Uploaded reference images
+├── modules/               # Core modules
+│   ├── story/             # Story generation
+│   │   └── generator.py   # Story text generation
+│   ├── image/             # Image generation
+│   │   ├── generator.py   # Main scene illustrations
+│   │   ├── background.py  # Background generation module
+│   │   └── overlay.py     # Text overlay module
+│   └── pdf/               # PDF generation module
+│       └── creator.py     # PDF creation and formatting
+├── utils/                 # Utility functions
+│   ├── session.py         # Session management
+│   └── helpers.py         # Miscellaneous helpers
+└── requirements.txt       # Project dependencies
 ```
-
-## Architecture
-
-This application follows a backend-focused architecture:
-
-- **Python Backend**: Handles all core processing and business logic
-  - Text generation with OpenAI API
-  - Image creation with OpenAI API
-  - PDF generation
-  - Session management and caching
-
-- **Simple Frontend**: Provides user interface with minimal logic
-  - Form for user input
-  - Display of generated content
-  - API calls to backend services
 
 ## Setup and Installation
 
@@ -62,8 +52,8 @@ This application follows a backend-focused architecture:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/storybook.git
-   cd storybook
+   git clone https://github.com/yourusername/storybook-simplified.git
+   cd storybook-simplified
    ```
 
 2. Create a virtual environment:
@@ -74,55 +64,40 @@ This application follows a backend-focused architecture:
 
 3. Install dependencies:
    ```
-   pip install -r backend/requirements.txt
-   ```
-
-4. Run the cleanup script to ensure proper directory structure:
-   ```
-   python cleanup.py
+   pip install -r requirements.txt
    ```
 
 ### Running the Application
 
 1. Start the application:
    ```
-   python run_storybook.py
+   python app.py
    ```
 
-2. The application will automatically open in your default web browser at http://127.0.0.1:5000
-
-### Command Line Options
-
-The `run_storybook.py` script accepts the following options:
-
-- `--port PORT`: Specify the port (default: 5000)
-- `--no-browser`: Don't open browser window automatically
-- `--clean-cache`: Clean old cache files before starting
+2. Open your browser and navigate to http://127.0.0.1:5000
 
 ## Usage
 
 1. Enter the child's name, story theme, and personal traits
-2. Select text and image generation models
+2. Optionally upload a reference image of the child
 3. Enter your OpenAI API key
-4. Click "Generate Prompts" to create story prompts
-5. Generate images for each prompt
-6. Create a complete storybook PDF
-7. Download and enjoy!
+4. Click "Generate Story" to create a personalized story
+5. For each scene, click "Generate Illustration" to create images
+6. Once all illustrations are generated, click "Create PDF Storybook"
+7. Download and enjoy your personalized storybook!
 
-## API Usage and Costs
+## Architecture
 
-This application uses the following OpenAI APIs:
+This application follows a modular architecture:
 
-- **Text Generation**: GPT-3.5 Turbo, GPT-4, or GPT-4 Turbo
-- **Image Generation**: GPT Image model
-
-The application implements caching to reduce API costs. Identical prompts and image requests will use cached results when available.
+- **Story Generation Module**: Generates personalized story scenes using OpenAI's GPT models
+- **Image Generation Modules**:
+  - **Illustration Generator**: Creates illustrations for story scenes
+  - **Background Generator**: Creates themed backgrounds for text pages
+  - **Text Overlay**: Combines text with backgrounds for text pages
+- **PDF Generator**: Creates downloadable PDF storybooks from generated content
+- **Session Management**: Handles user session data storage and retrieval
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- [turn.js](http://www.turnjs.com/) for the page flip effect
-- OpenAI for the text and image generation APIs

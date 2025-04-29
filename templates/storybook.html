@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ data.child_name }}'s Storybook</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .img-container {
+            max-width: 45%;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .img-container img {
+            max-width: 100%;
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .img-container {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ data.child_name }}'s {{ data.theme }} Adventure</h1>
+            <a href="/" class="back-link">← Back to Generator</a>
+        </header>
+        
+        <div class="storybook-header">
+            <h2>Your Storybook</h2>
+            <a href="/download-pdf/storybook_{{ session_id }}.pdf" class="download-button">Download PDF</a>
+        </div>
+        
+        <!-- Just display all images in a grid -->
+        <div class="gallery">
+            {% if data.images %}
+                {% for scene_idx, images in data.images.items() %}
+                    {% if images.illustration %}
+                        <div class="img-container">
+                            <img src="/static/images/{{ images.illustration.split('/')[-1] }}" alt="Image">
+                        </div>
+                    {% endif %}
+                    {% if images.text_overlay %}
+                        <div class="img-container">
+                            <img src="/static/images/{{ images.text_overlay.split('/')[-1] }}" alt="Text">
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p>No images generated yet.</p>
+            {% endif %}
+        </div>
+        
+        <div class="storybook-footer">
+            <a href="/download-pdf/storybook_{{ session_id }}.pdf" class="download-button">Download PDF</a>
+        </div>
+    </div>
+</body>
+</html>

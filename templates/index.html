@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storybook Generator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Storybook Generator POC</h1>
+            <p>Create personalized storybooks with AI-generated text and illustrations</p>
+            <div class="signature">Made with ❤️ by Nikhil</div>
+        </header>
+        
+        <!-- Error message display -->
+        <div id="errorMessage" class="error hidden"></div>
+        
+        <!-- Form for story generation -->
+        <section class="form-container">
+            <h2>Generate Your Storybook</h2>
+            <form id="storyForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="childName">Child's Name</label>
+                    <input type="text" id="childName" name="childName" required placeholder="Enter the child's name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="theme">Story Theme</label>
+                    <input type="text" id="theme" name="theme" required placeholder="e.g., Space Adventure, Underwater Exploration, Magic Forest">
+                </div>
+                
+                <div class="form-group">
+                    <label for="traits">Personal Details About the Child</label>
+                    <textarea id="traits" name="traits" required placeholder="Enter hobbies, favorite animals, colors, locations, or other interests..."></textarea>
+                    <div class="help-text">These details will be incorporated into the story</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="referenceImage">Reference Image of the Child (Optional)</label>
+                    <input type="file" id="referenceImage" name="referenceImage" accept="image/*">
+                    <div class="help-text">Upload a clear photo of the child to ensure they look consistent in all illustrations</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="illustrationQuality">Illustration Quality</label>
+                    <select id="illustrationQuality" name="illustrationQuality">
+                        <option value="low">Low (Faster, Lower Cost)</option>
+                        <option value="medium">Medium (Balanced)</option>
+                        <option value="high" selected>High (Best Quality)</option>
+                    </select>
+                    <div class="help-text">Higher quality results in better illustrations but costs more API tokens</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="backgroundQuality">Background Quality</label>
+                    <select id="backgroundQuality" name="backgroundQuality">
+                        <option value="low">Low (Faster, Lower Cost)</option>
+                        <option value="medium" selected>Medium (Recommended)</option>
+                        <option value="high">High (Best Quality)</option>
+                    </select>
+                    <div class="help-text">Quality setting for background images</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apiKey">OpenAI API Key</label>
+                    <input type="password" id="apiKey" name="apiKey" required placeholder="Enter your OpenAI API key">
+                    <div class="help-text">Your API key is used only for this session and not stored on our servers</div>
+                </div>
+                
+                <div class="button-container">
+                    <button type="submit" id="generateBtn">Generate Story</button>
+                </div>
+            </form>
+            
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="loading hidden">
+                <div class="spinner"></div>
+                <p id="loadingMessage">Generating your story...</p>
+            </div>
+        </section>
+        
+        <!-- Story display -->
+        <section id="storyContainer" class="story-container hidden">
+            <h2>Your Story</h2>
+            <div id="scenesList" class="scenes-list">
+                <!-- Scenes will be added here by JavaScript -->
+            </div>
+            
+            <div class="button-container">
+                <button type="button" id="createPdfBtn">Create PDF Storybook</button>
+            </div>
+        </section>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

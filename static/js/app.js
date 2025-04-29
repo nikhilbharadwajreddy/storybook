@@ -1,205 +1,59 @@
 /**
- * Storybook Generator POC - Frontend Script
- * Made with ❤️ by Nikhil
- * 
- * Handles only UI interactions and API calls to Python backend.
- * All core functionality is implemented in the backend.
+ * Storybook Generator - Frontend JavaScript
+ * -----------------------------------------
+ * Handles user interactions and API calls for the storybook generator.
  */
 
-// Constants
-const API_BASE_URL = '/api';
-
-// Global state - minimal, just for UI tracking
+// Store session data
 let sessionId = null;
+let scenes = [];
 
-/**
- * Initialize application when DOM is loaded
- */
+// Wait for DOM to be loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Initializing Storybook UI');
+    console.log('Storybook Generator initialized');
     
     // Initialize form
-    initForm();
-    
-    // Load available models
-    loadModels();
-    
-    // Test API connection
-    testApiConnection();
-});
-
-/**
- * Initialize form and event listeners
- */
-function initForm() {
-    // Get form element
     const storyForm = document.getElementById('storyForm');
     if (storyForm) {
         storyForm.addEventListener('submit', handleFormSubmit);
     }
     
-    // Image model change event for quality selector
-    const imageModel = document.getElementById('imageModel');
-    if (imageModel) {
-        imageModel.addEventListener('change', toggleQualitySelector);
+    // Initialize create PDF button
+    const createPdfBtn = document.getElementById('createPdfBtn');
+    if (createPdfBtn) {
+        createPdfBtn.addEventListener('click', handleCreatePdf);
     }
-    
-    // Refresh models button
-    const refreshBtn = document.getElementById('refreshModelsBtn');
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', loadModels);
-    }
-    
-    // Create book button
-    document.getElementById('createBookBtn')?.addEventListener('click', handleCreateBook);
-    
-    // Back to prompts button
-    document.getElementById('backToPromptBtn')?.addEventListener('click', () => {
-        document.getElementById('storybookContainer').classList.add('hidden');
-        document.getElementById('promptsContainer').classList.remove('hidden');
-        document.getElementById('createBookContainer').classList.remove('hidden');
-    });
-}
+});
 
 /**
- * Toggle quality selector based on selected image model
- */
-function toggleQualitySelector() {
-    const imageModel = document.getElementById('imageModel').value;
-    const qualityContainer = document.getElementById('qualityContainer');
-    
-    if (imageModel === 'gpt-image-1') {
-        qualityContainer.style.display = 'block';
-    } else {
-        qualityContainer.style.display = 'none';
-    }
-}
-
-/**
- * Test API connection
- */
-async function testApiConnection() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/test`);
-        
-        if (!response.ok) {
-            throw new Error(`API returned status ${response.status}`);
-        }
-        
-        console.log('API connection successful');
-    } catch (error) {
-        console.error('API connection failed:', error);
-        showError('Cannot connect to the API server. Please make sure it is running.');
-    }
-}
-
-/**
- * Load available AI models from the API
- */
-async function loadModels() {
-    try {
-        showLoading('Loading available models...');
-        
-        const response = await fetch(`${API_BASE_URL}/models`);
-        if (!response.ok) {
-            throw new Error(`Failed to load models: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Available models:', data);
-        
-        // Populate text models
-        const textModelSelect = document.getElementById('textModel');
-        if (textModelSelect) {
-            // Clear existing options (except placeholder)
-            while (textModelSelect.options.length > 1) {
-                textModelSelect.remove(1);
-            }
-            
-            // Add new options
-            data.text.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.id;
-                option.textContent = model.name;
-                textModelSelect.appendChild(option);
-            });
-        }
-        
-        // Populate image models
-        const imageModelSelect = document.getElementById('imageModel');
-        if (imageModelSelect) {
-            // Clear existing options (except placeholder)
-            while (imageModelSelect.options.length > 1) {
-                imageModelSelect.remove(1);
-            }
-            
-            // Add new options
-            data.image.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.id;
-                option.textContent = model.name;
-                imageModelSelect.appendChild(option);
-            });
-        }
-        
-        hideLoading();
-        
-    } catch (error) {
-        console.error('Error loading models:', error);
-        showError(`Failed to load models: ${error.message}`);
-        hideLoading();
-    }
-}
-
-/**
- * Handle form submission
+ * Handle form submission to generate a story
  * @param {Event} e - Form submit event
  */
 async function handleFormSubmit(e) {
     e.preventDefault();
     
-    // Simple UI validation
+    // Get form data
     const form = e.target;
-    const childName = form.childName.value.trim();
-    const theme = form.theme.value.trim();
-    const traits = form.traits.value.trim();
-    const apiKey = form.apiKey.value.trim();
-    const textModel = form.textModel.value;
+    const formData = new FormData(form);
     
-    if (!childName) {
-        showError("Please enter the child's name");
-        return;
-    }
+    // Basic validation
+    const childName = formData.get('childName').trim();
+    const theme = formData.get('theme').trim();
+    const traits = formData.get('traits').trim();
+    const apiKey = formData.get('apiKey').trim();
     
-    if (!theme) {
-        showError("Please enter a story theme");
-        return;
-    }
-    
-    if (!traits) {
-        showError("Please enter traits about the child");
-        return;
-    }
-    
-    if (!apiKey) {
-        showError("Please enter your OpenAI API key");
-        return;
-    }
-    
-    if (!textModel) {
-        showError("Please select a text generation model");
+    if (!childName || !theme || !traits || !apiKey) {
+        showError('Please fill in all required fields');
         return;
     }
     
     try {
-        showLoading('Generating story prompts...');
+        // Show loading state
+        showLoading('Generating your story...');
         hideError();
         
-        // Create FormData for file upload
-        const formData = new FormData(form);
-        
-        // Send request to backend
-        const response = await fetch(`${API_BASE_URL}/generate-prompts`, {
+        // Call API to generate story
+        const response = await fetch('/api/generate-story', {
             method: 'POST',
             body: formData
         });
@@ -210,97 +64,96 @@ async function handleFormSubmit(e) {
         }
         
         const data = await response.json();
-        console.log('Generated prompts:', data);
+        console.log('Story generated:', data);
         
-        // Store session ID
+        // Store session data
         sessionId = data.sessionId;
+        scenes = data.scenes;
         
-        // Display prompts
-        displayPrompts(data.prompts);
+        // Display scenes
+        displayScenes(scenes);
         
-        // Fetch cost info
-        fetchCosts();
-        
+        // Hide loading and scroll to results
         hideLoading();
-        
-        // Show create book button
-        document.getElementById('createBookContainer').classList.remove('hidden');
-        
-        // Scroll to prompts section
-        document.getElementById('promptsContainer').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('storyContainer').scrollIntoView({ behavior: 'smooth' });
         
     } catch (error) {
-        console.error('Error generating prompts:', error);
-        showError(error.message || 'Failed to generate prompts');
+        console.error('Error generating story:', error);
+        showError(error.message || 'Failed to generate story');
         hideLoading();
     }
 }
 
 /**
- * Display prompts in the UI
- * @param {Array} prompts - Array of prompts
+ * Display story scenes in the UI
+ * @param {Array} scenes - Array of scene texts
  */
-function displayPrompts(prompts) {
-    const container = document.getElementById('promptsContainer');
-    container.innerHTML = '<h2>Generated Story Prompts</h2>';
+function displayScenes(scenes) {
+    const container = document.getElementById('scenesList');
+    container.innerHTML = '';
     
-    prompts.forEach((prompt, index) => {
-        const promptText = typeof prompt === 'string' ? prompt : prompt.prompt;
+    scenes.forEach((scene, index) => {
+        const sceneCard = document.createElement('div');
+        sceneCard.className = 'scene-card';
         
-        const card = document.createElement('div');
-        card.className = 'prompt-card';
-        
-        card.innerHTML = `
-            <div class="prompt-text">
-                <strong>Prompt ${index + 1}:</strong> ${promptText}
+        sceneCard.innerHTML = `
+            <div class="scene-header">
+                <h3>Scene ${index + 1}</h3>
             </div>
-            <div id="image-container-${index}" class="image-container">
-                <p>Click "Generate Image" to create an illustration for this prompt.</p>
+            <div class="scene-content">
+                <p class="scene-text">${scene}</p>
+                <div id="scene-${index}-images" class="scene-images">
+                    <div class="image-container">
+                        <p>Click "Generate Illustration" to create an image for this scene.</p>
+                    </div>
+                </div>
             </div>
-            <div class="image-actions">
-                <button id="generate-image-${index}" onclick="generateImage(${index})">Generate Image</button>
+            <div class="scene-actions">
+                <button type="button" onclick="generateIllustration(${index})">Generate Illustration</button>
             </div>
         `;
         
-        container.appendChild(card);
+        container.appendChild(sceneCard);
     });
     
-    container.classList.remove('hidden');
+    // Show story container
+    document.getElementById('storyContainer').classList.remove('hidden');
 }
 
 /**
- * Generate image for a prompt
- * @param {number} promptIndex - Index of the prompt
+ * Generate an illustration for a specific scene
+ * @param {number} sceneIndex - Index of the scene
  */
-window.generateImage = async function(promptIndex) {
+async function generateIllustration(sceneIndex) {
     if (!sessionId) {
-        showError('No active session. Please generate prompts first.');
+        showError('No active session. Please generate a story first.');
         return;
     }
     
     const apiKey = document.getElementById('apiKey').value.trim();
     if (!apiKey) {
-        showError('API key is required to generate images');
+        showError('API key is required to generate illustrations');
         return;
     }
     
-    // Get container and button
-    const imageContainer = document.getElementById(`image-container-${promptIndex}`);
-    const generateBtn = document.getElementById(`generate-image-${promptIndex}`);
+    // Get image container
+    const imageContainer = document.getElementById(`scene-${sceneIndex}-images`);
+    const actionButton = document.querySelector(`.scene-actions button[onclick="generateIllustration(${sceneIndex})"]`);
     
     // Show loading state
-    imageContainer.innerHTML = '<div class="spinner"></div><p>Generating image and text page...</p>';
-    generateBtn.disabled = true;
+    imageContainer.innerHTML = '<div class="spinner"></div><p>Generating illustration...</p>';
+    actionButton.disabled = true;
     
     try {
-        const response = await fetch(`${API_BASE_URL}/generate-image`, {
+        // Call API to generate illustration
+        const response = await fetch('/api/generate-illustration', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 sessionId: sessionId,
-                promptIndex: promptIndex,
+                sceneIndex: sceneIndex,
                 apiKey: apiKey
             })
         });
@@ -311,50 +164,45 @@ window.generateImage = async function(promptIndex) {
         }
         
         const data = await response.json();
-        console.log('Generated images:', data);
+        console.log('Illustration generated:', data);
         
         // Display images
         imageContainer.innerHTML = `
-            <div class="image-set">
-                <div class="image-item">
-                    <h4>Story Image</h4>
-                    <img src="${data.imagePath}" alt="Generated illustration" class="prompt-image">
-                </div>
-                <div class="image-item">
-                    <h4>Text Page</h4>
-                    <img src="${data.textPath}" alt="Text with magical background" class="prompt-image">
-                </div>
+            <div class="image-container">
+                <h4>Illustration</h4>
+                <img src="${data.illustrationPath}" alt="Scene ${sceneIndex + 1} Illustration">
             </div>
-            <p class="info-text">Both images will be included in your storybook!</p>
+            <div class="image-container">
+                <h4>Text Overlay</h4>
+                <img src="${data.textOverlayPath}" alt="Scene ${sceneIndex + 1} Text">
+            </div>
         `;
         
         // Update button
-        generateBtn.textContent = 'Regenerate Images';
-        generateBtn.disabled = false;
-        
-        // Update costs
-        fetchCosts();
+        actionButton.textContent = 'Regenerate Illustration';
+        actionButton.disabled = false;
         
     } catch (error) {
-        console.error('Error generating image:', error);
-        imageContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
-        generateBtn.disabled = false;
+        console.error('Error generating illustration:', error);
+        imageContainer.innerHTML = `<p class="error">Error: ${error.message || 'Failed to generate illustration'}</p>`;
+        actionButton.disabled = false;
     }
 }
 
 /**
- * Handle create book button click
+ * Handle creating a PDF storybook
  */
-async function handleCreateBook() {
+async function handleCreatePdf() {
     if (!sessionId) {
-        showError('No active session. Please generate prompts first.');
+        showError('No active session. Please generate a story first.');
         return;
     }
     
     try {
-        showLoading('Creating your storybook...');
+        showLoading('Creating your storybook PDF...');
         
-        const response = await fetch(`${API_BASE_URL}/create-storybook`, {
+        // Call API to create PDF
+        const response = await fetch('/api/create-pdf', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -370,114 +218,38 @@ async function handleCreateBook() {
         }
         
         const data = await response.json();
-        console.log('Storybook created:', data);
+        console.log('PDF created:', data);
         
-        // Hide prompts container
-        document.getElementById('promptsContainer').classList.add('hidden');
-        document.getElementById('createBookContainer').classList.add('hidden');
-        
-        // Show preview container
-        const previewContainer = document.getElementById('preview-container');
-        previewContainer.innerHTML = `
-            <h2>Your Storybook</h2>
-            <div class="storybook-download">
-                <p>Your storybook PDF is ready!</p>
-                <a href="${data.downloadUrl}" class="download-button" target="_blank">Download Storybook PDF</a>
-            </div>
-            <div class="preview-controls">
-                <button id="back-to-prompts-btn" class="secondary-button">Back to Prompts</button>
-            </div>
-        `;
-        
-        previewContainer.classList.remove('hidden');
-        
-        // Add event listener for back button
-        document.getElementById('back-to-prompts-btn')?.addEventListener('click', () => {
-            previewContainer.classList.add('hidden');
-            document.getElementById('promptsContainer').classList.remove('hidden');
-            document.getElementById('createBookContainer').classList.remove('hidden');
-        });
-        
-        hideLoading();
+        // Redirect to storybook view
+        window.location.href = '/view-storybook/' + sessionId;
         
     } catch (error) {
-        console.error('Error creating storybook:', error);
-        showError(error.message || 'Failed to create storybook');
+        console.error('Error creating PDF:', error);
+        showError(error.message || 'Failed to create PDF');
         hideLoading();
     }
 }
 
 /**
- * Fetch costs for the current session
+ * Show error message
+ * @param {string} message - Error message
  */
-async function fetchCosts() {
-    if (!sessionId) return;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/cost/${sessionId}`);
-        
-        if (!response.ok) {
-            console.error('Failed to fetch costs:', response.statusText);
-            return;
-        }
-        
-        const data = await response.json();
-        console.log('Session costs:', data);
-        
-        // Update cost display
-        updateCostDisplay(data);
-        
-    } catch (error) {
-        console.error('Error fetching costs:', error);
+function showError(message) {
+    const errorElement = document.getElementById('errorMessage');
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.remove('hidden');
     }
 }
 
 /**
- * Update cost display in UI
- * @param {Object} costs - Cost data
+ * Hide error message
  */
-function updateCostDisplay(costs) {
-    // Simple pricing calculations (rough estimates)
-    let textCost = 0;
-    let imageCost = 0;
-    
-    // Calculate text cost
-    const textData = costs.text_generation || {};
-    if (textData.model === 'gpt-4') {
-        textCost = ((textData.input_tokens || 0) / 1000 * 0.03) + 
-                   ((textData.output_tokens || 0) / 1000 * 0.06);
-    } else if (textData.model === 'gpt-4-turbo') {
-        textCost = ((textData.input_tokens || 0) / 1000 * 0.01) + 
-                   ((textData.output_tokens || 0) / 1000 * 0.03);
-    } else {
-        textCost = ((textData.input_tokens || 0) / 1000 * 0.0015) + 
-                   ((textData.output_tokens || 0) / 1000 * 0.002);
+function hideError() {
+    const errorElement = document.getElementById('errorMessage');
+    if (errorElement) {
+        errorElement.classList.add('hidden');
     }
-    
-    // Calculate image cost
-    const imageData = costs.image_generation || [];
-    imageCost = imageData.reduce((total, img) => {
-        if (img.model === 'gpt-image-1') {
-            // Fixed cost per quality
-            const qualityCosts = {
-                'low': 0.003,
-                'medium': 0.006,
-                'high': 0.009
-            };
-            return total + (qualityCosts[img.quality] || 0.009);
-        } else {
-            // Default DALL-E cost
-            return total + 0.04;
-        }
-    }, 0);
-    
-    // Update UI
-    document.getElementById('textCost').textContent = '$' + textCost.toFixed(4);
-    document.getElementById('imageCost').textContent = '$' + imageCost.toFixed(4);
-    document.getElementById('totalCost').textContent = '$' + (textCost + imageCost).toFixed(4);
-    
-    // Show cost display
-    document.getElementById('costDisplay').classList.remove('hidden');
 }
 
 /**
@@ -505,29 +277,5 @@ function hideLoading() {
     
     if (loadingIndicator) {
         loadingIndicator.classList.add('hidden');
-    }
-}
-
-/**
- * Show error message
- * @param {string} message - Error message
- */
-function showError(message) {
-    const errorMessage = document.getElementById('errorMessage');
-    
-    if (errorMessage) {
-        errorMessage.textContent = message;
-        errorMessage.classList.remove('hidden');
-    }
-}
-
-/**
- * Hide error message
- */
-function hideError() {
-    const errorMessage = document.getElementById('errorMessage');
-    
-    if (errorMessage) {
-        errorMessage.classList.add('hidden');
     }
 }
