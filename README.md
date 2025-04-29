@@ -52,8 +52,8 @@ storybook-simplified/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/storybook-simplified.git
-   cd storybook-simplified
+   git clone https://github.com/nikhilbharadwajreddy/storybook.git
+   cd storybook
    ```
 
 2. Create a virtual environment:
@@ -96,7 +96,6 @@ This application follows a modular architecture:
   - **Background Generator**: Creates themed backgrounds for text pages
   - **Text Overlay**: Combines text with backgrounds for text pages
 - **PDF Generator**: Creates downloadable PDF storybooks from generated content
-- **Session Management**: Handles user session data storage and retrieval
 
 ## License
 
