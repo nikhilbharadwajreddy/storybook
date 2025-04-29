@@ -13,7 +13,6 @@ import uuid
 import logging
 from werkzeug.utils import secure_filename
 from datetime import datetime
-from flask_cors import CORS  # Import CORS
 
 # Import services
 from modules.story.generator import generate_story
@@ -23,7 +22,7 @@ from modules.image.final_overlay import create_text_overlay
 from modules.pdf.super_simple import create_storybook_pdf
 from utils.session import get_session_data, save_session_data
 from utils.helpers import ensure_directories, allowed_file
-from utils.user_management import save_user_data, get_all_users
+from utils.user_tracker import save_user_data, get_all_users
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -31,7 +30,6 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
 app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_' + str(uuid.uuid4()))
 
 # Add basename filter for templates
@@ -50,64 +48,79 @@ ensure_directories([UPLOAD_FOLDER, PDF_FOLDER, REFERENCE_FOLDER])
 
 @app.route('/')
 def index():
-    """Render the main input form or redirect to login."""
-    # Check if user is logged in
-    if 'user_email' not in session:
-        return redirect(url_for('login_page'))
-    return render_template('index.html')
+    """Redirect to user details form or render main input form if coming from there."""
+    if 'user_verified' in session:
+        return render_template('index.html')
+    return render_template('user_details.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login_page():
-    """Handle user login."""
-    if request.method == 'POST':
-        email = request.form.get('email')
-        name = request.form.get('name')
+@app.route('/submit-user-details', methods=['POST'])
+def submit_user_details():
+    """Process user details and redirect to main app."""
+    try:
+        # Get form data
+        user_name = request.form.get('userName')
+        user_email = request.form.get('userEmail')
         
-        # Basic validation
-        if not email or not name:
-            return render_template('login.html', error='Please provide both name and email')
+        # Validate inputs
+        if not all([user_name, user_email]):
+            return render_template('user_details.html', error="Please provide both name and email")
         
         # Save user data
-        try:
-            save_user_data(email, name)
-            
-            # Set session variables
-            session['user_email'] = email
-            session['user_name'] = name
-            
-            # Redirect to main page
-            return redirect(url_for('index'))
-        except Exception as e:
-            logger.exception("Error saving user data")
-            return render_template('login.html', error=f'Error: {str(e)}')
-    
-    # GET request - show login form
-    return render_template('login.html')
-
-@app.route('/admin')
-def admin_page():
-    """Admin page to view registered users."""
-    # Check if user is logged in and is admin
-    if 'user_email' not in session:
-        return redirect(url_for('login_page'))
-    if session['user_email'] != 'admin@example.com':  # Simple admin check
+        save_user_data(user_name, user_email)
+        
+        # Mark user as verified in session
+        session['user_verified'] = True
+        session['user_name'] = user_name
+        session['user_email'] = user_email
+        
+        # Redirect to main app
         return redirect(url_for('index'))
         
-    users = get_all_users()
-    return render_template('admin.html', users=users)
+    except Exception as e:
+        logger.exception("Error processing user details")
+        return render_template('user_details.html', error=str(e))
 
-@app.route('/logout')
-def logout():
-    """Log out the user by clearing the session."""
-    session.clear()
-    return redirect(url_for('login_page'))
+@app.route('/admin/users')
+def admin_users():
+    """Admin endpoint to view all user data.
+    
+    This is a simple endpoint that shows all users who have accessed the application.
+    In a production environment, you would add proper authentication.
+    """
+    # Simple admin password protection (replace with proper auth in production)
+    admin_key = request.args.get('key')
+    if not admin_key or admin_key != 'admin123':
+        return "Unauthorized", 401
+    
+    # Get all users
+    users_data = get_all_users()
+    
+    # Format timestamps for display
+    users = []
+    for user in users_data:
+        # Clone the user data
+        formatted_user = user.copy()
+        
+        # Format the timestamp
+        timestamp = user.get('timestamp', '')
+        if timestamp:
+            try:
+                # Parse ISO format and convert to more readable format
+                dt = datetime.fromisoformat(timestamp)
+                formatted_user['formatted_time'] = dt.strftime('%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                formatted_user['formatted_time'] = timestamp
+        else:
+            formatted_user['formatted_time'] = 'Unknown'
+            
+        users.append(formatted_user)
+    
+    # Render template
+    return render_template('admin_users.html', users=users)
 
 @app.route('/api/generate-story', methods=['POST'])
 def api_generate_story():
     """Generate story based on form input."""
-    # Ensure user is logged in
-    if 'user_email' not in session:
-        return jsonify({"error": "You must be logged in"}), 401
     try:
         # Create a unique session ID
         session_id = str(uuid.uuid4())
@@ -181,9 +194,6 @@ def api_generate_story():
 @app.route('/api/generate-illustration', methods=['POST'])
 def api_generate_illustration():
     """Generate illustration for a story scene."""
-    # Ensure user is logged in
-    if 'user_email' not in session:
-        return jsonify({"error": "You must be logged in"}), 401
     try:
         data = request.get_json()
         
@@ -250,27 +260,11 @@ def api_generate_illustration():
         
     except Exception as e:
         logger.exception("Error generating illustration")
-        
-        # Provide more detailed error information
-        error_message = str(e)
-        error_type = type(e).__name__
-        
-        # Check for specific error types
-        if "api_key" in error_message.lower() or "auth" in error_message.lower():
-            return jsonify({"error": f"OpenAI API key error: {error_message}", "error_type": error_type}), 401
-        elif "timeout" in error_message.lower() or "timed out" in error_message.lower():
-            return jsonify({"error": "Request timed out. Image generation is taking longer than expected. Please try again.", "error_type": error_type}), 504
-        elif "rate" in error_message.lower() and "limit" in error_message.lower():
-            return jsonify({"error": "OpenAI rate limit reached. Please wait a moment before trying again.", "error_type": error_type}), 429
-        else:
-            return jsonify({"error": error_message, "error_type": error_type}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/create-pdf', methods=['POST'])
 def api_create_pdf():
     """Create a PDF storybook from generated content."""
-    # Ensure user is logged in
-    if 'user_email' not in session:
-        return jsonify({"error": "You must be logged in"}), 401
     try:
         data = request.get_json()
         session_id = data.get('sessionId')
@@ -290,13 +284,22 @@ def api_create_pdf():
         images = session_data.get('images', {})
         
         # Prepare image paths in correct order
+        # We need to ensure a specific sequence: illustration followed by text overlay for each scene
         image_paths = []
-        for i in range(len(story_scenes)):
+        
+        # First, make sure we have a consistent ordering of scene indices
+        scene_indices = sorted([int(idx) for idx in images.keys()])
+        
+        for i in scene_indices:
             scene_images = images.get(str(i), {})
-            if 'illustration' in scene_images:
+            
+            # Add illustration first, then text overlay
+            # Only add if both exist to maintain proper pairing
+            if 'illustration' in scene_images and 'text_overlay' in scene_images:
                 image_paths.append(scene_images['illustration'])
-            if 'text_overlay' in scene_images:
                 image_paths.append(scene_images['text_overlay'])
+        
+        logger.info(f"Adding {len(image_paths)} images to PDF in alternating illustration/text order")
         
         # Generate PDF
         pdf_filename = f"storybook_{session_id}.pdf"
@@ -328,10 +331,6 @@ def download_pdf(filename):
 @app.route('/view-storybook/<session_id>')
 def view_storybook(session_id):
     """View the generated storybook."""
-    # Ensure user is logged in
-    if 'user_email' not in session:
-        return redirect(url_for('login_page'))
-        
     session_data = get_session_data(session_id)
     if not session_data:
         return redirect(url_for('index'))

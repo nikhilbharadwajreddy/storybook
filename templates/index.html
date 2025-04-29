@@ -13,15 +13,6 @@
             <h1>Storybook Generator POC</h1>
             <p>Create personalized storybooks with AI-generated text and illustrations</p>
             <div class="signature">Made with ❤️ by Nikhil</div>
-            {% if session.user_email %}
-            <div class="user-info">
-                Logged in as: {{ session.user_name }} ({{ session.user_email }})
-                <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
-                {% if session.user_email == 'admin@example.com' %}
-                | <a href="{{ url_for('admin_page') }}" class="admin-link">Admin Panel</a>
-                {% endif %}
-            </div>
-            {% endif %}
         </header>
         
         <!-- Error message display -->
@@ -100,10 +91,6 @@
             
             <div class="button-container">
                 <button type="button" id="createPdfBtn">Create PDF Storybook</button>
-                <div id="pdfLoadingIndicator" class="loading hidden">
-                    <div class="spinner"></div>
-                    <p>Creating your PDF storybook...</p>
-                </div>
             </div>
         </section>
     </div>

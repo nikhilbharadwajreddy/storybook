@@ -40,7 +40,7 @@ def create_storybook_pdf(title, child_name, story_scenes, image_paths, output_pa
     safe_width = page_width * 0.95  # 95% of available width
     safe_height = page_height * 0.95  # 95% of available height
     
-    # Build content - just images, one per page
+    # Build content - images, one per page, alternating illustration and text
     content = []
     
     for i, image_path in enumerate(image_paths):
@@ -59,7 +59,12 @@ def create_storybook_pdf(title, child_name, story_scenes, image_paths, output_pa
                 new_width = img_width * ratio
                 new_height = img_height * ratio
                 
-                logger.info(f"Image {i+1}: Original size {img_width}x{img_height}, scaled to {new_width:.1f}x{new_height:.1f}")
+                # Determine if this is an illustration or text overlay (based on filename)
+                is_illustration = "_illustration." in image_path.lower()
+                is_text = "_text." in image_path.lower()
+                page_type = "Illustration" if is_illustration else "Text" if is_text else "Unknown"
+                
+                logger.info(f"Image {i+1} ({page_type}): Original size {img_width}x{img_height}, scaled to {new_width:.1f}x{new_height:.1f}")
                 
                 # Add to PDF
                 img_obj = Image(image_path, width=new_width, height=new_height)

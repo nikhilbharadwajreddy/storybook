@@ -145,13 +145,8 @@ async function generateIllustration(sceneIndex) {
     actionButton.disabled = true;
     
     try {
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Request timed out after 180 seconds')), 180000)
-        );
-        
-        // Create the fetch promise
-        const fetchPromise = fetch('/api/generate-illustration', {
+        // Call API to generate illustration
+        const response = await fetch('/api/generate-illustration', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -163,18 +158,9 @@ async function generateIllustration(sceneIndex) {
             })
         });
         
-        // Race the promises
-        const response = await Promise.race([fetchPromise, timeoutPromise]);
-        
         if (!response.ok) {
-            let errorMessage = `Server error: ${response.status}`;
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorMessage;
-            } catch (parseError) {
-                console.error('Error parsing error response:', parseError);
-            }
-            throw new Error(errorMessage);
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Server error: ${response.status}`);
         }
         
         const data = await response.json();
@@ -199,7 +185,6 @@ async function generateIllustration(sceneIndex) {
     } catch (error) {
         console.error('Error generating illustration:', error);
         imageContainer.innerHTML = `<p class="error">Error: ${error.message || 'Failed to generate illustration'}</p>`;
-        imageContainer.innerHTML += '<p>This could be due to a network issue, an invalid API key, or a timeout. Please try again.</p>';
         actionButton.disabled = false;
     }
 }
@@ -214,9 +199,16 @@ async function handleCreatePdf() {
     }
     
     try {
-        // Show the PDF-specific loading indicator
-        document.getElementById('pdfLoadingIndicator').classList.remove('hidden');
-        document.getElementById('createPdfBtn').disabled = true;
+        // Create PDF loading indicator below the button
+        const pdfLoadingDiv = document.createElement('div');
+        pdfLoadingDiv.id = 'pdfLoadingIndicator';
+        pdfLoadingDiv.className = 'loading';
+        pdfLoadingDiv.innerHTML = '<div class="spinner"></div><p>Creating your storybook PDF...</p>';
+        
+        // Insert after the PDF button
+        const createPdfBtn = document.getElementById('createPdfBtn');
+        createPdfBtn.parentNode.insertBefore(pdfLoadingDiv, createPdfBtn.nextSibling);
+        createPdfBtn.disabled = true;
         
         // Call API to create PDF
         const response = await fetch('/api/create-pdf', {
@@ -243,9 +235,17 @@ async function handleCreatePdf() {
     } catch (error) {
         console.error('Error creating PDF:', error);
         showError(error.message || 'Failed to create PDF');
-        // Hide the PDF loading indicator and re-enable the button on error
-        document.getElementById('pdfLoadingIndicator').classList.add('hidden');
-        document.getElementById('createPdfBtn').disabled = false;
+        
+        // Remove loading indicator and enable button
+        const pdfLoadingDiv = document.getElementById('pdfLoadingIndicator');
+        if (pdfLoadingDiv) {
+            pdfLoadingDiv.remove();
+        }
+        
+        const createPdfBtn = document.getElementById('createPdfBtn');
+        if (createPdfBtn) {
+            createPdfBtn.disabled = false;
+        }
     }
 }
 

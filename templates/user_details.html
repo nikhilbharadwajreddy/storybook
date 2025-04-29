@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storybook Generator - Welcome</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .welcome-container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <header>
+            <h1>Welcome to Storybook Generator</h1>
+            <p>Create personalized storybooks with AI-generated text and illustrations</p>
+            <div class="signature">Made with ❤️ by Nikhil</div>
+        </header>
+        
+        <!-- Error message display -->
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <!-- Form for user details -->
+        <section class="form-container">
+            <h2>Please introduce yourself</h2>
+            <form id="userDetailsForm" method="POST" action="/submit-user-details">
+                <div class="form-group">
+                    <label for="userName">Your Name</label>
+                    <input type="text" id="userName" name="userName" required placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="userEmail">Your Email</label>
+                    <input type="email" id="userEmail" name="userEmail" required placeholder="Enter your email">
+                </div>
+                
+                <div class="button-container">
+                    <button type="submit">Continue to Storybook Generator</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</body>
+</html>

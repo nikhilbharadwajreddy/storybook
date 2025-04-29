@@ -91,7 +91,6 @@ label {
 
 input[type="text"],
 input[type="password"],
-input[type="email"],
 textarea {
     width: 100%;
     padding: 10px;
@@ -146,10 +145,6 @@ button:hover {
 .loading {
     text-align: center;
     padding: 20px;
-}
-
-.button-container .loading {
-    margin-top: 20px;
 }
 
 .spinner {
@@ -280,71 +275,6 @@ button:hover {
     height: auto;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Login Page Styles */
-.login-container {
-    max-width: 500px;
-    margin: 40px auto;
-    padding: 30px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-
-.text-center {
-    text-align: center;
-}
-
-/* Admin Page Styles */
-.admin-container {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 30px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-
-.admin-container table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.admin-container th, .admin-container td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-}
-
-.admin-container th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-}
-
-.admin-container tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-.empty-message {
-    text-align: center;
-    margin: 40px 0;
-    color: #666;
-    font-style: italic;
-}
-
-/* User info in header */
-.user-info {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #666;
-}
-
-.logout-link {
-    margin-left: 10px;
-    font-size: 12px;
-    color: #999;
 }
 
 /* Utility classes */

@@ -51,26 +51,13 @@ def generate_illustration(
     
     # Initialize OpenAI client
     transport = httpx.HTTPTransport(proxy=None)
-    client = OpenAI(
-        api_key=api_key, 
-        http_client=httpx.Client(
-            transport=transport,
-            timeout=120.0  # 2 minute timeout for image generation
-        )
-    )
+    client = OpenAI(api_key=api_key, http_client=httpx.Client(transport=transport))
     
     try:
         # Create the output filename
         filename = f"{session_id}_scene_{scene_index}_illustration.png"
         output_path = os.path.join(output_dir, filename)
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        # Log API key information (first few characters only for security)
-        if api_key:
-            masked_key = api_key[:5] + "*" * (len(api_key) - 9) + api_key[-4:]
-            logger.info(f"Using API key starting with: {masked_key}")
-        else:
-            logger.error("No API key provided for image generation")
         
         # Generate image based on whether reference image is provided
         if reference_image_path and os.path.exists(reference_image_path):
@@ -121,7 +108,7 @@ def generate_illustration(
         elif hasattr(result.data[0], 'url') and result.data[0].url:
             # Download from URL
             import requests
-            response = requests.get(result.data[0].url, timeout=60)  # Increased timeout to 60 seconds
+            response = requests.get(result.data[0].url, timeout=30)
             if response.status_code == 200:
                 with open(output_path, "wb") as f:
                     f.write(response.content)
@@ -135,18 +122,7 @@ def generate_illustration(
         
     except Exception as e:
         logger.error(f"Error generating illustration: {str(e)}")
-        
-        # Categorize the error for better debugging
-        error_message = str(e)
-        if "api_key" in error_message.lower() or "auth" in error_message.lower():
-            logger.error("API key authentication error")
-        elif "timeout" in error_message.lower() or "timed out" in error_message.lower():
-            logger.error("Request timeout error")
-        elif "rate" in error_message.lower() and "limit" in error_message.lower():
-            logger.error("Rate limit exceeded error")
-        
-        # Include the error type in the exception for better error handling
-        raise Exception(f"Failed to generate illustration: {str(e)} ({type(e).__name__})")
+        raise Exception(f"Failed to generate illustration: {str(e)}")
 
 def create_enhanced_prompt(original_prompt: str, child_name: str, has_reference: bool = False) -> str:
     """
