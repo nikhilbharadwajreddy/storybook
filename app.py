@@ -23,6 +23,7 @@ from modules.pdf.super_simple import create_storybook_pdf
 from utils.session import get_session_data, save_session_data
 from utils.helpers import ensure_directories, allowed_file
 from utils.user_tracker import save_user_data, get_all_users
+from utils.fallback_init import initialize_all
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -45,6 +46,9 @@ REFERENCE_FOLDER = os.path.join(STATIC_FOLDER, 'references')
 
 # Ensure directories exist
 ensure_directories([UPLOAD_FOLDER, PDF_FOLDER, REFERENCE_FOLDER])
+
+# Initialize fallbacks and required resources
+initialize_all()
 
 @app.route('/')
 def index():
@@ -224,26 +228,40 @@ def api_generate_illustration():
         # Get scene text
         scene = story_scenes[scene_index]
         
+        # Log request details for debugging
+        logger.info(f"Generating illustration for session {session_id}, scene {scene_index}")
+        logger.info(f"Using quality: {illustration_quality}")
+        if reference_image_path:
+            logger.info(f"Using reference image: {reference_image_path}")
+        
         # Generate illustration
-        illustration_path = generate_illustration(
-            prompt=scene,
-            session_id=session_id,
-            scene_index=scene_index,
-            child_name=child_name,
-            reference_image_path=reference_image_path,
-            api_key=api_key,
-            quality=illustration_quality,
-            output_dir=UPLOAD_FOLDER
-        )
+        try:
+            illustration_path = generate_illustration(
+                prompt=scene,
+                session_id=session_id,
+                scene_index=scene_index,
+                child_name=child_name,
+                reference_image_path=reference_image_path,
+                api_key=api_key,
+                quality=illustration_quality,
+                output_dir=UPLOAD_FOLDER
+            )
+        except Exception as e:
+            logger.exception(f"Error in illustration generation: {str(e)}")
+            return jsonify({"error": f"Illustration generation failed: {str(e)}"}), 500
         
         # Create text overlay
-        text_overlay_path = create_text_overlay(
-            text=scene,
-            background_image_path=background_image,
-            session_id=session_id,
-            scene_index=scene_index,
-            output_dir=UPLOAD_FOLDER
-        )
+        try:
+            text_overlay_path = create_text_overlay(
+                text=scene,
+                background_image_path=background_image,
+                session_id=session_id,
+                scene_index=scene_index,
+                output_dir=UPLOAD_FOLDER
+            )
+        except Exception as e:
+            logger.exception(f"Error in text overlay creation: {str(e)}")
+            return jsonify({"error": f"Text overlay creation failed: {str(e)}"}), 500
         
         # Update session data
         session_data['images'][str(scene_index)] = {

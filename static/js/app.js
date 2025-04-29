@@ -145,6 +145,10 @@ async function generateIllustration(sceneIndex) {
     actionButton.disabled = true;
     
     try {
+        // Set a timeout for the fetch request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+        
         // Call API to generate illustration
         const response = await fetch('/api/generate-illustration', {
             method: 'POST',
@@ -155,11 +159,19 @@ async function generateIllustration(sceneIndex) {
                 sessionId: sessionId,
                 sceneIndex: sceneIndex,
                 apiKey: apiKey
-            })
+            }),
+            signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
-            const errorData = await response.json();
+            let errorData;
+            try {
+                errorData = await response.json();
+            } catch (e) {
+                throw new Error(`Server error: ${response.status}`);
+            }
             throw new Error(errorData.error || `Server error: ${response.status}`);
         }
         
@@ -184,7 +196,14 @@ async function generateIllustration(sceneIndex) {
         
     } catch (error) {
         console.error('Error generating illustration:', error);
-        imageContainer.innerHTML = `<p class="error">Error: ${error.message || 'Failed to generate illustration'}</p>`;
+        
+        // Handle specific errors
+        if (error.name === 'AbortError') {
+            imageContainer.innerHTML = `<p class="error">Request timed out. The server is taking too long to respond. Please try again later.</p>`;
+        } else {
+            imageContainer.innerHTML = `<p class="error">Error: ${error.message || 'Failed to generate illustration'}</p>`;
+        }
+        
         actionButton.disabled = false;
     }
 }

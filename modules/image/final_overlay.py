@@ -111,22 +111,38 @@ def create_text_overlay(
 #     return ImageFont.load_default()
 
 def get_storybook_font(size: int) -> ImageFont.FreeTypeFont:
-    """Load available kid-friendly fonts from static/fonts/."""
+    """Load available kid-friendly fonts from static/fonts/ with absolute path."""
+    # Get absolute path to the static/fonts directory
+    current_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    fonts_dir = os.path.join(current_dir, 'static', 'fonts')
+    
+    # Define font paths
     kid_font_paths = [
-        "static/fonts/ComicNeue-Regular.ttf"
-        "static/fonts/AkayaKanadaka-Regular.ttf",
-        "static/fonts/Barriecito-Regular.ttf",
-        "static/fonts/DynaPuff-VariableFont_wdth,wght.ttf"
+        os.path.join(fonts_dir, "ComicNeue-Regular.ttf"),
+        os.path.join(fonts_dir, "AkayaKanadaka-Regular.ttf"),
+        os.path.join(fonts_dir, "Barriecito-Regular.ttf"),
+        os.path.join(fonts_dir, "DynaPuff-VariableFont_wdth,wght.ttf")
     ]
     
+    # Log available fonts
+    logger.info(f"Looking for fonts in: {fonts_dir}")
+    if os.path.exists(fonts_dir):
+        available_fonts = os.listdir(fonts_dir)
+        logger.info(f"Available fonts: {available_fonts}")
+    else:
+        logger.warning(f"Fonts directory not found: {fonts_dir}")
+    
+    # Try each font
     for font_path in kid_font_paths:
         if os.path.exists(font_path):
             try:
+                logger.info(f"Loading font: {font_path}")
                 return ImageFont.truetype(font_path, size)
             except Exception as e:
                 logger.warning(f"Failed to load font {font_path}: {e}")
                 continue
 
+    # Fall back to default
     logger.warning("No custom fonts found. Falling back to default font.")
     return ImageFont.load_default()
 
