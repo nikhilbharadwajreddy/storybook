@@ -22,6 +22,7 @@ from modules.image.final_overlay import create_text_overlay
 from modules.pdf.super_simple import create_storybook_pdf
 from utils.session import get_session_data, save_session_data
 from utils.helpers import ensure_directories, allowed_file
+from utils.user_management import save_user_data, get_all_users
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -47,12 +48,64 @@ ensure_directories([UPLOAD_FOLDER, PDF_FOLDER, REFERENCE_FOLDER])
 
 @app.route('/')
 def index():
-    """Render the main input form."""
+    """Render the main input form or redirect to login."""
+    # Check if user is logged in
+    if 'user_email' not in session:
+        return redirect(url_for('login_page'))
     return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    """Handle user login."""
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        
+        # Basic validation
+        if not email or not name:
+            return render_template('login.html', error='Please provide both name and email')
+        
+        # Save user data
+        try:
+            save_user_data(email, name)
+            
+            # Set session variables
+            session['user_email'] = email
+            session['user_name'] = name
+            
+            # Redirect to main page
+            return redirect(url_for('index'))
+        except Exception as e:
+            logger.exception("Error saving user data")
+            return render_template('login.html', error=f'Error: {str(e)}')
+    
+    # GET request - show login form
+    return render_template('login.html')
+
+@app.route('/admin')
+def admin_page():
+    """Admin page to view registered users."""
+    # Check if user is logged in and is admin
+    if 'user_email' not in session:
+        return redirect(url_for('login_page'))
+    if session['user_email'] != 'admin@example.com':  # Simple admin check
+        return redirect(url_for('index'))
+        
+    users = get_all_users()
+    return render_template('admin.html', users=users)
+
+@app.route('/logout')
+def logout():
+    """Log out the user by clearing the session."""
+    session.clear()
+    return redirect(url_for('login_page'))
 
 @app.route('/api/generate-story', methods=['POST'])
 def api_generate_story():
     """Generate story based on form input."""
+    # Ensure user is logged in
+    if 'user_email' not in session:
+        return jsonify({"error": "You must be logged in"}), 401
     try:
         # Create a unique session ID
         session_id = str(uuid.uuid4())
@@ -126,6 +179,9 @@ def api_generate_story():
 @app.route('/api/generate-illustration', methods=['POST'])
 def api_generate_illustration():
     """Generate illustration for a story scene."""
+    # Ensure user is logged in
+    if 'user_email' not in session:
+        return jsonify({"error": "You must be logged in"}), 401
     try:
         data = request.get_json()
         
@@ -197,6 +253,9 @@ def api_generate_illustration():
 @app.route('/api/create-pdf', methods=['POST'])
 def api_create_pdf():
     """Create a PDF storybook from generated content."""
+    # Ensure user is logged in
+    if 'user_email' not in session:
+        return jsonify({"error": "You must be logged in"}), 401
     try:
         data = request.get_json()
         session_id = data.get('sessionId')
@@ -254,6 +313,10 @@ def download_pdf(filename):
 @app.route('/view-storybook/<session_id>')
 def view_storybook(session_id):
     """View the generated storybook."""
+    # Ensure user is logged in
+    if 'user_email' not in session:
+        return redirect(url_for('login_page'))
+        
     session_data = get_session_data(session_id)
     if not session_data:
         return redirect(url_for('index'))

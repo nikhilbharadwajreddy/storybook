@@ -35,6 +35,15 @@
         <header>
             <h1>{{ data.child_name }}'s {{ data.theme }} Adventure</h1>
             <a href="/" class="back-link">← Back to Generator</a>
+            {% if session.user_email %}
+            <div class="user-info">
+                Logged in as: {{ session.user_name }} ({{ session.user_email }})
+                <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+                {% if session.user_email == 'admin@example.com' %}
+                | <a href="{{ url_for('admin_page') }}" class="admin-link">Admin Panel</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </header>
         
         <div class="storybook-header">

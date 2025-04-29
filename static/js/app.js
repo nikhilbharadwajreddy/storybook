@@ -199,7 +199,9 @@ async function handleCreatePdf() {
     }
     
     try {
-        showLoading('Creating your storybook PDF...');
+        // Show the PDF-specific loading indicator
+        document.getElementById('pdfLoadingIndicator').classList.remove('hidden');
+        document.getElementById('createPdfBtn').disabled = true;
         
         // Call API to create PDF
         const response = await fetch('/api/create-pdf', {
@@ -226,7 +228,9 @@ async function handleCreatePdf() {
     } catch (error) {
         console.error('Error creating PDF:', error);
         showError(error.message || 'Failed to create PDF');
-        hideLoading();
+        // Hide the PDF loading indicator and re-enable the button on error
+        document.getElementById('pdfLoadingIndicator').classList.add('hidden');
+        document.getElementById('createPdfBtn').disabled = false;
     }
 }
 

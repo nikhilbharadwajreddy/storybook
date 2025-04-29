@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storybook Generator - Sign In</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .login-container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .page-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4a154b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Storybook Generator POC</h1>
+            <p>Create personalized storybooks with AI-generated text and illustrations</p>
+            <div class="signature">Made with ❤️ by Nikhil</div>
+        </header>
+        
+        <!-- Error message display -->
+        <div id="errorMessage" class="error {{ 'hidden' if not error else '' }}">
+            {{ error if error else '' }}
+        </div>
+        
+        <!-- Login form -->
+        <section class="login-container">
+            <h2 class="page-title">Welcome to Storybook Generator</h2>
+            <p class="text-center">Please sign in to continue</p>
+            
+            <form id="loginForm" method="post" action="{{ url_for('login_page') }}">
+                <div class="form-group">
+                    <label for="name">Your Name</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                
+                <div class="button-container">
+                    <button type="submit" id="loginBtn">Continue to App</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</body>
+</html>
